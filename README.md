@@ -69,36 +69,59 @@ Run all unit and integration test suites (uses Testcontainers to automatically m
 
 ## How to Run & Test Manually
 
+For local execution, we use the Maven `exec:java` plugin which automatically resolves classpaths and dependencies.
+
 ### A. Testing the Elasticsearch Consumer
 1. Create the `twitter` topic:
    ```bash
-   docker exec -it kafka-forge-broker kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic twitter
+   docker exec -i kafka-forge-broker kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic twitter
    ```
 2. Run the Elasticsearch bulk consumer:
    ```bash
-   java -cp kafka-consumer-elasticsearch/target/kafka-consumer-elasticsearch-1.0.jar com.github.faizalzafri.kafkaapp.ElasticSearchConsumerBulk
+   $env:JAVA_HOME="C:\Users\Faizal\.sdkman\candidates\java\21.0.11-tem"
+   & "C:\Users\Faizal\.sdkman\candidates\maven\current\bin\mvn.cmd" -pl kafka-consumer-elasticsearch exec:java '-Dexec.mainClass=com.github.faizalzafri.kafkaapp.ElasticSearchConsumerBulk'
    ```
 3. Produce test messages to the topic:
    ```bash
-   docker exec -it kafka-forge-broker kafka-console-producer --bootstrap-server localhost:9092 --topic twitter
+   docker exec -i kafka-forge-broker kafka-console-producer --bootstrap-server localhost:9092 --topic twitter
    # Paste this sample tweet JSON:
    {"id_str":"1001","text":"Standardizing on Jackson and Java 21 Virtual Threads!","user":{"followers_count":15000}}
    ```
 4. Verify the document was indexed in Elasticsearch:
    ```bash
-   curl http://localhost:9200/twitter/_search?pretty
+   # In PowerShell:
+   (Invoke-RestMethod -Uri "http://localhost:9200/twitter/_search?pretty").hits.hits
+   
+   # Or in standard bash/curl:
+   curl -s http://localhost:9200/twitter/_search?pretty
    ```
 
 ### B. Testing the Backpressure Consumer
 1. Create the `customer-events` topic:
    ```bash
-   docker exec -it kafka-forge-broker kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic customer-events
+   docker exec -i kafka-forge-broker kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic customer-events
    ```
 2. Run the backpressured app:
    ```bash
-   java -cp kafka-consumer-backpressure/target/kafka-consumer-backpressure-1.0.jar com.github.faizalzafri.kafkaapp.BackpressureConsumerApp
+   $env:JAVA_HOME="C:\Users\Faizal\.sdkman\candidates\java\21.0.11-tem"
+   & "C:\Users\Faizal\.sdkman\candidates\maven\current\bin\mvn.cmd" -pl kafka-consumer-backpressure exec:java '-Dexec.mainClass=com.github.faizalzafri.kafkaapp.BackpressureConsumerApp'
    ```
 3. Observe console output. The application simulates slow database writes and logs the exact pause/resume triggers and offset commits.
+
+### C. Testing the Retry & DLQ Consumer
+1. Create the orders topics:
+   ```bash
+   docker exec -i kafka-forge-broker kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic main-orders
+   docker exec -i kafka-forge-broker kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic main-orders-retry
+   docker exec -i kafka-forge-broker kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic main-orders-dlq
+   ```
+2. Run the Retry/DLQ app:
+   ```bash
+   $env:JAVA_HOME="C:\Users\Faizal\.sdkman\candidates\java\21.0.11-tem"
+   & "C:\Users\Faizal\.sdkman\candidates\maven\current\bin\mvn.cmd" -pl kafka-consumer-retry-dlq exec:java '-Dexec.mainClass=com.github.faizalzafri.kafkaapp.RetryDlpConsumerApp'
+   ```
+3. Produce test messages to the `main-orders` topic to witness successful processing, permanent failure routing to DLQ, and transient failures retrying with backoff before exhaustion.
+
 
 ---
 

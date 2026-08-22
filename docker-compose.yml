@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.0
+    image: confluentinc/cp-zookeeper:6.2.1
     container_name: kafka-forge-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -11,7 +11,7 @@ services:
       - "2181:2181"
 
   kafka:
-    image: confluentinc/cp-kafka:7.3.0
+    image: confluentinc/cp-kafka:6.2.1
     container_name: kafka-forge-broker
     depends_on:
       - zookeeper
@@ -27,7 +27,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    image: elasticsearch:7.17.10
     container_name: kafka-forge-elasticsearch
     environment:
       - discovery.type=single-node

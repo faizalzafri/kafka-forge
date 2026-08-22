@@ -30,18 +30,11 @@ public class ElasticSearchConsumer {
 
     private static RestHighLevelClient createElasticSearchClient() {
 
-        String hostname = "";
-        String username = "";
-        String password = "";
+        String hostname = "localhost";
+        int port = 9200;
+        String scheme = "http";
 
-        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
-
-        RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(hostname, 443, "https"))
-                .setHttpClientConfigCallback(httpAsyncClientBuilder -> {
-                    httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-                    return httpAsyncClientBuilder;
-                });
+        RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(hostname, port, scheme));
         return new RestHighLevelClient(restClientBuilder);
     }
 
