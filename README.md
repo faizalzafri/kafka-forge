@@ -18,24 +18,25 @@ The project is structured as a Maven multi-module workspace:
 | [`kafka-streams-filter-tweets`](file:///e:/Dev/kafka-forge/kafka-streams-filter-tweets) | Real-time streams application mapping, filtering, and routing high-velocity event streams. | Kafka Streams |
 | [`kafka-consumer-retry-dlq`](file:///e:/Dev/kafka-forge/kafka-consumer-retry-dlq) | Resilient consumer implementing non-blocking retry topics and a Dead Letter Queue (DLQ). | Kafka Clients, Jackson |
 | [`kafka-consumer-backpressure`](file:///e:/Dev/kafka-forge/kafka-consumer-backpressure) | High-performance consumer using Java 21 Virtual Threads, Semaphore gates, and partition pause/resume flow control. | Kafka Clients, Jackson, Java 21 |
+| [`kafka-spring-forge`](file:///e:/Dev/kafka-forge/kafka-spring-forge) | Production-grade Spring Boot 3.3 application showcasing Spring Kafka, `@RetryableTopic`, `@DltHandler`, Spring Kafka Streams, Spring Data Elasticsearch, and Java 21 Virtual Threads. | Spring Boot 3.3, Spring Kafka, Spring Data ES |
 
 ---
 
 ## Design Patterns
 
 ### 1. Resilient Non-blocking Retries & DLQ
-To avoid blocking the partition consumption thread when encountering transient network or database failures, this module routes failed messages to separate **Retry Topics** (with exponential backoff) and eventually to a **Dead Letter Queue (DLQ)** for permanent errors. 
-- Main Consumer commits the offset immediately after delegating to the retry flow.
-- A dedicated Retry Consumer processes retries with a configured backoff delay.
-- Non-recoverable/poison pill records are sent directly to the DLQ.
+To avoid blocking the partition consumption thread when encountering transient network or database failures, this repository demonstrates non-blocking retries across two paradigms:
+- **Core Java (`kafka-consumer-retry-dlq`)**: Custom partition-level seek and backoff delays, routing unrecoverable failures to DLQ headers.
+- **Spring Kafka (`kafka-spring-forge`)**: Declarative `@RetryableTopic(attempts = "3", backoff = @Backoff(delay = 1000, multiplier = 2.0))` with `@DltHandler` for instant poison-pill isolation.
 
 ### 2. High-Throughput Pause/Resume Backpressure (Java 21 Virtual Threads)
-When processing records concurrently using a thread pool, consuming too fast will saturate memory or downstream systems. This module implements partition-level pause/resume flow control:
-- Polls records using an allocation-free iterator.
-- Submits processing tasks to lightweight **Java 21 Virtual Threads**.
-- Tracks concurrent executions using a `Semaphore` (acting as a watermark).
-- If active tasks hit the `highWatermark`, assigned partitions are **paused** and outstanding batch records are **seeked back** to allow the poll loop to continue running (avoiding session timeouts).
-- Once active tasks drain below the `lowWatermark`, partitions are **resumed**.
+When processing records concurrently using a thread pool, consuming too fast will saturate memory or downstream systems:
+- **Core Java (`kafka-consumer-backpressure`)**: Allocation-free batch iteration with `Semaphore` gates, partition `pause()` and `seek()` to safe contiguous committed offsets.
+- **Spring Boot 3 (`kafka-spring-forge`)**: Native Java 21 Virtual Thread support via `spring.threads.virtual.enabled: true` and dynamic container pause/resume via `KafkaListenerEndpointRegistry`.
+
+### 3. Real-Time Stream Processing & Elasticsearch Sinks
+- **Kafka Streams**: Declarative `KStream` topology filtering and branching events in real-time.
+- **Elasticsearch Ingestion**: High-throughput document indexing with automatic mapping and offset tracking.
 
 ---
 
@@ -60,7 +61,7 @@ $env:JAVA_HOME="C:\Users\Faizal\.sdkman\candidates\java\21.0.11-tem"
 ```
 
 ### 3. Run Automated Validation Tests
-Run all unit and integration test suites (uses Testcontainers to automatically manage temporary Kafka test instances):
+Run all unit and integration test suites across all 7 modules:
 ```bash
 & "C:\Users\Faizal\.sdkman\candidates\maven\current\bin\mvn.cmd" clean verify
 ```
@@ -69,7 +70,7 @@ Run all unit and integration test suites (uses Testcontainers to automatically m
 
 ## How to Run & Test Manually
 
-For local execution, we use the Maven `exec:java` plugin which automatically resolves classpaths and dependencies.
+For local execution, we use Maven plugin runners which automatically resolve classpaths and dependencies.
 
 ### A. Testing the Elasticsearch Consumer
 1. Create the `twitter` topic:
@@ -122,9 +123,17 @@ For local execution, we use the Maven `exec:java` plugin which automatically res
    ```
 3. Produce test messages to the `main-orders` topic to witness successful processing, permanent failure routing to DLQ, and transient failures retrying with backoff before exhaustion.
 
+### D. Testing the Spring Boot Application (`kafka-spring-forge`)
+1. Run the Spring Boot application:
+   ```bash
+   $env:JAVA_HOME="C:\Users\Faizal\.sdkman\candidates\java\21.0.11-tem"
+   & "C:\Users\Faizal\.sdkman\candidates\maven\current\bin\mvn.cmd" -pl kafka-spring-forge spring-boot:run
+   ```
+2. Observe Spring Kafka auto-provisioning topics, starting Virtual Thread listener containers, configuring `@RetryableTopic` backoff chains, starting `@EnableKafkaStreams` topologies, and connecting to Elasticsearch.
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](file:///e:/Dev/kafka-forge/LICENSE).
+This project is open-sourced under the terms of the [MIT License](file:///e:/Dev/kafka-forge/LICENSE).
+

@@ -1,3 +1,4 @@
+name: kafka-forge
 version: '3.8'
 
 services:

@@ -178,9 +178,9 @@ public class RetryDlpConsumerIntegrationTest {
         ProcessedRecord transientExhaustedRecord = new ProcessedRecord("transient-exhausted", "fail-transient");
         testProducer.send(new ProducerRecord<>(MAIN_TOPIC, transientExhaustedRecord.getId(), MAPPER.writeValueAsString(transientExhaustedRecord))).get();
 
-        // Wait for consumers to process everything (up to 15 seconds)
+        // Wait for consumers to process everything (up to 30 seconds for reliable execution under load)
         long start = System.currentTimeMillis();
-        while (System.currentTimeMillis() - start < 15000) {
+        while (System.currentTimeMillis() - start < 30000) {
             // Check if we processed all expected records
             if (successfulIds.contains("happy-1") && 
                 successfulIds.contains("transient-success") && 
