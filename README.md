@@ -1,6 +1,14 @@
 # Kafka Forge: Production-Grade Kafka Reference Implementation
 
-Kafka Forge is an enterprise-grade reference repository containing patterns and configurations for building highly resilient, high-throughput applications using **Apache Kafka**, **Java 21**, **Jackson Databind**, and **Docker**.
+[![Java 21](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
+[![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-3.7.1-231F20?style=for-the-badge&logo=apachekafka&logoColor=white)](https://kafka.apache.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Testcontainers](https://img.shields.io/badge/Testcontainers-1.20.1-2C3E50?style=for-the-badge&logo=testcontainers&logoColor=white)](https://testcontainers.com/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-7.17-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)](https://www.elastic.co/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](file:///e:/Dev/kafka-forge/LICENSE)
+
+Kafka Forge is an enterprise-grade reference repository containing patterns and configurations for building highly resilient, high-throughput applications using **Apache Kafka**, **Java 21**, **Spring Boot 3**, **Jackson Databind**, and **Docker**.
 
 This repository showcases advanced messaging patterns including **Non-blocking Retries & Dead Letter Queues (DLQ)**, and **Multi-threaded flow control with partition Pause/Resume Backpressure using Java 21 Virtual Threads**.
 
