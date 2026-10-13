@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: kafka-spring-forge
+  threads:
+    virtual:
+      enabled: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        compression.type: snappy
+    consumer:
+      group-id: spring-forge-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+    listener:
+      ack-mode: RECORD
+    streams:
+      application-id: spring-streams-filter-app
+      bootstrap-servers: localhost:9092
+      properties:
+        auto.offset.reset: earliest
+        commit.interval.ms: 100
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+
+  elasticsearch:
+    uris: http://localhost:9200
+
+logging:
+  level:
+    root: INFO
+    com.github.faizalzafri.kafkaapp.spring: INFO
+    org.springframework.kafka: INFO
