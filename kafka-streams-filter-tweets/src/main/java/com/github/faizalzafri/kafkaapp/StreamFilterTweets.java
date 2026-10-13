@@ -1,6 +1,6 @@
 package com.github.faizalzafri.kafkaapp;
 
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -41,22 +41,16 @@ public class StreamFilterTweets {
         kafkaStreams.start();
     }
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     private static Integer extractUserFromTweet(String value) {
-
-        Integer count = null;
-
-        try{
-            count = JsonParser
-                    .parseString(value)
-                    .getAsJsonObject()
-                    .get("user")
-                    .getAsJsonObject()
-                    .get("followers_count")
-                    .getAsInt();
-
-        }catch(NullPointerException e){
-            count = 0;
+        try {
+            return MAPPER.readTree(value)
+                    .path("user")
+                    .path("followers_count")
+                    .asInt();
+        } catch (Exception e) {
+            return 0;
         }
-        return count;
     }
 }

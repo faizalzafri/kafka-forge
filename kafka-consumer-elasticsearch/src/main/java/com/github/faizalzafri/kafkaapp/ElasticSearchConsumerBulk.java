@@ -1,6 +1,6 @@
 package com.github.faizalzafri.kafkaapp;
 
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -18,7 +18,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,18 +31,11 @@ public class ElasticSearchConsumerBulk {
 
     private static RestHighLevelClient createElasticSearchClient() {
 
-        String hostname = "";
-        String username = "";
-        String password = "";
+        String hostname = "localhost";
+        int port = 9200;
+        String scheme = "http";
 
-        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
-
-        RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(hostname, 443, "https"))
-                .setHttpClientConfigCallback(httpAsyncClientBuilder -> {
-                    httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-                    return httpAsyncClientBuilder;
-                });
+        RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(hostname, port, scheme));
         return new RestHighLevelClient(restClientBuilder);
     }
 
@@ -109,11 +102,15 @@ public class ElasticSearchConsumerBulk {
         }
     }
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     private static String extractIdFromTweet(String value) {
-        return JsonParser
-                .parseString(value)
-                .getAsJsonObject()
-                .get("id_str")
-                .getAsString();
+        try {
+            return MAPPER.readTree(value)
+                    .path("id_str")
+                    .asText();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
